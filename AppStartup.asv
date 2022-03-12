@@ -1,0 +1,8 @@
+
+while true
+udpr = UDPReceiver('LocalIPPort',2000);
+dataReceived = udpr();
+bytesReceived = bytesReceived + length(dataReceived);
+disp(dataReceived);
+release(udpr);
+end
