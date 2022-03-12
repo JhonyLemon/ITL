@@ -1,0 +1,6 @@
+u = udpport("LocalPort",4713,"LocalHost","192.168.22.103",);
+fopen(u);
+data = fscanf(u);
+fclose(u);
+delete(u);
+clear u;
