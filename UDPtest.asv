@@ -17,10 +17,34 @@ format hex
                   'FRACSEC',data.Data(11:14),...
                   'TIMEBASE',swapbytes(typecast(uint8(data.Data(15:18)),'uint32')),...
                   'NUM_PMU',swapbytes(typecast(uint8(data.Data(19:20)),'uint16')));
+                      ParsedData.STN=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.IDCODEDATA=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.FORMAT=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.PHNMR=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.ANNMR=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.DGNMR=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.CHNAM=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.PHUNIT=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.ANUNIT=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.DIGUNIT=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.FNOM=zeros(ParsedData.NUM_PMU,0);
+                      ParsedData.CFGCNT=zeros(ParsedData.NUM_PMU,0);
+                      j=21;
                   for i=1:ParsedData.NUM_PMU
-                      ParsedData.PHNMR(1)=data.Data(41:42);
-
-                      ends
+                      ParsedData.STN(i,1:16)=data.Data(j:(j+15));
+                      ParsedData.IDCODEDATA(i,1:2)=data.Data(j+16:j+17);
+                      ParsedData.FORMAT(i,1:2)=data.Data(j+18:j+19);
+                      ParsedData.PHNMR(i,1:1)=swapbytes(typecast(uint8(data.Data(j+20:j+21)),'uint16'));
+                      ParsedData.ANNMR(i,1:1)=swapbytes(typecast(uint8(data.Data(j+22:j+23)),'uint16'));
+                      ParsedData.DGNMR(i,1:1)=swapbytes(typecast(uint8(data.Data(j+24:j+25)),'uint16'));
+                      
+                      ParsedData.CHNAM(i,1:2)=data.Data(j:j+1);
+                      ParsedData.PHUNIT(i,1:2)=data.Data(j:j+1);
+                      ParsedData.ANUNIT(i,1:2)=data.Data(j:j+1);
+                      ParsedData.DIGUNIT(i,1:2)=data.Data(j:j+1);
+                      ParsedData.FNOM(i,1:2)=data.Data(j:j+1);
+                      ParsedData.CFGCNT(i,1:2)=data.Data(j:j+1);
+                  end
                   ParsedData.DATA_RATE=data.Data(col-3:col-2);
                   ParsedData.CHK=data.Data(col-1:col);
 %                   'STN',data.Data(21:36),...
@@ -35,5 +59,4 @@ format hex
 %                   'DIGUNIT',data.Data(15:16),...
 %                   'FNOM',data.Data(15:16),...
 %                   'CFGCNT',data.Data(15:16),...
-%                   'DATA_RATE',data.Data(15:16),...
-%                   'CHK',data.Data(15:16));
+
