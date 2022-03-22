@@ -3,6 +3,9 @@ classdef CNF_1
     %   Detailed explanation goes here
 
     properties(Access=public)
+
+           sha256 char              %Used to determine if new frame has different values
+
                                     %Frame synchronization word.
                                     %Leading byte: AA hex
                                     % Second byte: Frame type and version, divided as follows:
@@ -119,6 +122,8 @@ classdef CNF_1
 
     methods
         function obj = CNF_1(frame)
+            obj.sha256=SHA256(uint8(frame.Data));
+
             obj.SYNCFRAMETYPE=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[7 6 5],"uint8"))));%SYNC TYPE field
             obj.SYNCVERSION=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[4 3 2 1],"uint8"))));
             obj.FRAMESIZE=swapbytes(typecast(uint8(frame.Data(3:4)),'uint16'));%FRAMESIZE field

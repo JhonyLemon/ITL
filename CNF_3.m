@@ -4,6 +4,9 @@ classdef CNF_3
 
     properties(Access=public)
 
+
+           sha256 char              %Used to determine if new frame has different values
+
                                  %Frame synchronization word.
                                  %Leading byte: AA hex
                                  % Second byte: Frame type and version, divided as follows:
@@ -60,7 +63,7 @@ classdef CNF_3
         NUM_PMU uint16;         %The number of PMUs included in the data frame. No limit specified. The actual limit
                                 %will be determined by the limit of 65 535 bytes in one frame ("FRAMESIZE” field)
 
-            STN string;         %1–256 Station Name―in UTF-8 format, up to 255 bytes using the name field format (see
+            STN char;         %1–256 Station Name―in UTF-8 format, up to 255 bytes using the name field format (see
                                 %Table 11).
 
             ID_CODE_DATA int16; %Data stream ID number, 16-bit integer, defined in 6.2. It identifies the data stream in
@@ -103,28 +106,28 @@ classdef CNF_3
                                 % First 2 bytes: 16-bit flag that indicates the type of data modification when data is
                                 % being modified by a continuous process. When no modification process is being
                                 % applied, all bits shall be set to 0.
-            PHSCALE_1_1 uint8;  % (Bit 0 is the LSB, Bit 15 is the MSB.)
+                                % (Bit 0 is the LSB, Bit 15 is the MSB.)
                                 % This flag shall be used in conjunction with the data modification bit (Bit 9) in the
                                 % status word. That bit shall be set in any frame that data has been modified by any
                                 % process including those indicated in this flag   
-            PHSCALE_1_2 uint8;  %Bit # Meaning when bit set
-                                % 0 Not used, reserved
-                                % 1 Up sampled with interpolation
-                                % 2 Upsampled with extrapolation
-                                % 3 Down sampled by reselection (selecting every Nth sample)
-                                % 4 Down sampled with FIR filter
-                                % 5 Down sampled with non-FIR filter
-                                % 6 Filtered without changing sampling
-                                % 7 Phasor magnitude adjusted for calibration
-                                % 8 Phasor phase adjusted for calibration
-                                % 9 Phasor phase adjusted for rotation ( ±30º, ±120º, etc.)
-                                % 10 Pseudo-phasor value (combined from other phasors)
-                                % 11–14 Reserved for future assignment
-                                % 15 Modification applied, type not here defined
-            PHSCALE_1_3 uint8;  % Third byte: phasor type indication (Bit 0 is the LSB, Bit 7 is the MSB)
-                                % Bits 07–04: Reserved for future use
-                                % Bit 03: 0―voltage; 1―current.
-                                % Bits 02–00: Phasor component, coded as follows
+                                %Bit # Meaning when bit set
+            PHSCALE_1_0 uint8;  % 0 Not used, reserved
+            PHSCALE_1_1 uint8;  % 1 Up sampled with interpolation
+            PHSCALE_1_2 uint8;  % 2 Upsampled with extrapolation
+            PHSCALE_1_3 uint8;  % 3 Down sampled by reselection (selecting every Nth sample)
+            PHSCALE_1_4 uint8;  % 4 Down sampled with FIR filter
+            PHSCALE_1_5 uint8;  % 5 Down sampled with non-FIR filter
+            PHSCALE_1_6 uint8;  % 6 Filtered without changing sampling
+            PHSCALE_1_7 uint8;  % 7 Phasor magnitude adjusted for calibration
+            PHSCALE_1_8 uint8;  % 8 Phasor phase adjusted for calibration
+            PHSCALE_1_9 uint8;  % 9 Phasor phase adjusted for rotation ( ±30º, ±120º, etc.)
+            PHSCALE_1_10 uint8; % 10 Pseudo-phasor value (combined from other phasors)
+         PHSCALE_1_11_14 uint8; % 11–14 Reserved for future assignment
+            PHSCALE_1_15 uint8; % 15 Modification applied, type not here defined
+                                % Third byte: phasor type indication (Bit 0 is the LSB, Bit 7 is the MSB)
+         PHSCALE_1_20_23 uint8; % Bits 07–04: Reserved for future use
+         PHSCALE_1_19 uint8;    % Bit 03: 0―voltage; 1―current.
+         PHSCALE_1_16_18 uint8; % Bits 02–00: Phasor component, coded as follows
                                 % 111: Reserved
                                 % 110: Phase C
                                 % 101: Phase B
@@ -133,7 +136,7 @@ classdef CNF_3
                                 % 010: Negative sequence
                                 % 001: Positive sequence
                                 % 000: Zero sequence
-            PHSCALE_1_4 uint8;  % Fourth byte: available for user designation
+         PHSCALE_1_24_31 uint8; % Fourth byte: available for user designation
                                 % Second and third 4-byte words
                                 % For phasor X = Xm e jφ, this defines the scaling Y and angle offset θ to be applied to the
                                 % phasor as follows:
@@ -168,7 +171,8 @@ classdef CNF_3
             PMU_ELEV single;    %PMU Elevation in meters, Positive values are above mean sea level. WGS 84 datum.
                                 % Number in 32-bit IEEE floating-point format. For unspecified locations, infinity shall
                                 % be used.
-                                %             SVC_CLASS 1 Service class, as defined in IEEE Std C37.118.1, a single ASCII character. In 2011 it
+                                           
+            SVC_CLASS char;     %Service class, as defined in IEEE Std C37.118.1, a single ASCII character. In 2011 it
                                 % is M or P.
 
             WINDOW int32;       %Phasor measurement window length including all filters and estimation windows in
@@ -201,7 +205,122 @@ classdef CNF_3
 
     methods
         function obj = CNF_3(frame)
+            obj.sha256=SHA256(uint8(frame.Data));
 
+            obj.SYNCFRAMETYPE=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[7 6 5],"uint8"))));%SYNC TYPE field
+            obj.SYNCVERSION=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[4 3 2 1],"uint8"))));
+            obj.FRAMESIZE=swapbytes(typecast(uint8(frame.Data(3:4)),'uint16'));%FRAMESIZE field
+            obj.ID_CODE_SOURCE=swapbytes(typecast(uint8(frame.Data(5:6)),'uint16'));%IDCODE field
+            obj.SOC=datetime( swapbytes(typecast(uint8(frame.Data(7:10)),'uint32')), 'ConvertFrom', 'posixtime');%SOC field
+            obj.MTQ=uint8(frame.Data(11));%FRASEC field Bits 31–24 
+            obj.FRACSEC=swapbytes(typecast(uint8([0,frame.Data(12:14)]),'uint32'));%FRASEC field Bits 23–00
+            obj.CONT_IDX=swapbytes(typecast(uint8(frame.Data(15:16)),'uint16'));
+            obj.TIME_BASE_FLAGS=swapbytes(typecast(uint8(frame.Data(17)),'uint8'));
+            obj.TIME_BASE=swapbytes(typecast(uint8([0 frame.Data(18:19)]),'uint32'));
+            obj.NUM_PMU=swapbytes(typecast(uint8(frame.Data(20:21)),'uint16'));
+            j=10;
+            for i=1:obj.NUM_PMU
+
+            k=swapbytes(typecast(uint8(frame.Data(j)),'uint8'));
+            obj.STN(i,1:k)=char(uint8(frame.Data(j+1:j+k-1)));%Might want to check if correct
+            j=j+k+1;
+
+            obj.ID_CODE_DATA(i)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+            j=j+2;
+
+            obj.G_PMU_ID(i)=char(uint8(frame.Data(j:j+15)));
+            j=j+16;
+
+            obj.FORMAT_FREQ(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),4,"uint8"))));%SYNC TYPE field
+            obj.FORMAT_ANALOG(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),3,"uint8"))));%SYNC TYPE field 
+            obj.FORMAT_PHASORS(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),2,"uint8"))));%SYNC TYPE field 
+            obj.FORMAT_FORM(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),1,"uint8"))));%SYNC TYPE field
+            j=j+2;
+
+            obj.PHNMR(i,1:1)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+            obj.ANNMR(i,1:1)=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'uint16'));
+            obj.DGNMR(i,1:1)=swapbytes(typecast(uint8(frame.Data(j+4:j+5)),'uint16'));
+            j=j+6;
+            
+            for k=1:obj.PHNMR(i)
+                m=swapbytes(typecast(uint8(frame.Data(j)),'uint8'));
+                obj.CHNAM_PHNMR(i,k)=strtrim(string(char(uint8(frame.Data(j+1:j+m-1)))));%Might want to check if correct
+                j=j+k+1;
+            end
+            for k=1:obj.ANNMR(i)
+                m=swapbytes(typecast(uint8(frame.Data(j)),'uint8'));
+                obj.CHNAM_ANNMR(i,k)=strtrim(string(char(uint8(frame.Data(j+1:j+m-1)))));%Might want to check if correct
+                j=j+k+1;
+            end
+            for k=1:obj.DGNMR(i)
+                m=swapbytes(typecast(uint8(frame.Data(j)),'uint8'));
+                obj.CHNAM_DGNMR(i,k)=strtrim(string(char(uint8(frame.Data(j+1:j+m-1)))));%Might want to check if correct
+                j=j+k+1;
+            end
+
+            for k=1:obj.PHNMR(i)
+                obj.PHSCALE_1_0(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),1,"uint8"))));%Might want to check if correct
+                obj.PHSCALE_1_1(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),2,"uint8"))));
+                obj.PHSCALE_1_2(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),3,"uint8"))));
+                obj.PHSCALE_1_3(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),4,"uint8"))));
+                obj.PHSCALE_1_4(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),5,"uint8"))));
+                obj.PHSCALE_1_5(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),6,"uint8"))));
+                obj.PHSCALE_1_6(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),7,"uint8"))));
+                obj.PHSCALE_1_7(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),8,"uint8"))));
+                obj.PHSCALE_1_8(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),1,"uint8"))));
+                obj.PHSCALE_1_9(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),2,"uint8"))));
+                obj.PHSCALE_1_10(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),3,"uint8"))));
+                obj.PHSCALE_1_11_14(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),[7 6 5 4],"uint8"))));
+                obj.PHSCALE_1_15(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),8,"uint8"))));
+                obj.PHSCALE_1_16_18(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+2),[3 2 1],"uint8"))));
+                obj.PHSCALE_1_19(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+2),4,"uint8"))));
+                obj.PHSCALE_1_20_23(i,k)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+2),[8 7 6 5],"uint8"))));
+                obj.PHSCALE_1_24_31(i,k)=uint8(frame.Data(j+3));
+                obj.PHSCALE_2(i,k)=swapbytes(typecast(uint8(frame.Data(j+4:j+7)),'single'));
+                obj.PHSCALE_3(i,k)=swapbytes(typecast(uint8(frame.Data(j+8:j+11)),'single'));
+                j=j+12;
+            end
+
+            for k=1:obj.ANNMR(i)
+                obj.ANSCALE_B(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+                obj.ANSCALE_M(i,k)=swapbytes(typecast(uint8(frame.Data(j+4:j+7)),'single'));   
+                j=j+8;
+            end
+
+            for k=1:obj.DGNMR(i)
+                obj.DIGUNIT0(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+                obj.DIGUNIT1(i,k)=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'uint16'));   
+                j=j+4;
+            end
+
+            obj.PMU_LAT(i)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+            j=j+4;
+
+            obj.PMU_LON(i)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+            j=j+4;
+
+            obj.PMU_ELEV(i)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+            j=j+4;
+
+            obj.SVC_CLASS=char(uint8(frame.Data(j)));
+            j=j+1;
+
+            obj.WINDOW(i)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'uint32'));
+            j=j+4;
+
+            obj.GRP_DLY(i)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'uint32'));
+            j=j+4;
+
+            obj.FNOM(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),1,"uint8"))));
+            j=j+1;
+
+            obj.CFGCNT(i)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+            j=j+2;
+
+            end
+
+            obj.DATA_RATE=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+            obj.CHK=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'uint16'));
         end
     end
 end

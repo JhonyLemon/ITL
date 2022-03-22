@@ -3,6 +3,9 @@ classdef DataFrame
     %   Detailed explanation goes here
 
     properties(Access=public)
+
+           sha256 char              %Used to determine if new frame has different values
+
                                     %Frame synchronization word.
                                     %Leading byte: AA hex
                                     % Second byte: Frame type and version, divided as follows:
@@ -107,8 +110,78 @@ classdef DataFrame
     end
 
     methods
-        function obj = DataFrame(frame)
+        function obj = DataFrame(frame,cnf)
+            obj.sha256=SHA256(uint8(frame.Data));
 
+            obj.SYNCFRAMETYPE=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[7 6 5],"uint8"))));%SYNC TYPE field
+            obj.SYNCVERSION=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[4 3 2 1],"uint8"))));
+            obj.FRAMESIZE=swapbytes(typecast(uint8(frame.Data(3:4)),'uint16'));%FRAMESIZE field
+            obj.ID_CODE_SOURCE=swapbytes(typecast(uint8(frame.Data(5:6)),'uint16'));%IDCODE field
+            obj.SOC=datetime( swapbytes(typecast(uint8(frame.Data(7:10)),'uint32')), 'ConvertFrom', 'posixtime');%SOC field
+            obj.MTQ=uint8(frame.Data(11));%FRASEC field Bits 31–24 
+            obj.FRACSEC=swapbytes(typecast(uint8([0,frame.Data(12:14)]),'uint32'));%FRASEC field Bits 23–00
+            j=15;
+            for i=1:cnf.NUM_PMU
+                obj.STAT_DATA_ERROR(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[8 7],"uint8")))); 
+                obj.STAT_PMU_SYNC(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[6],"uint8"))));     
+                obj.STAT_DATA_SORTING(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[5],"uint8"))));     
+                obj.STAT_PMU_TRIGGER(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[4],"uint8"))));      
+                obj.STAT_CNF_CHANGE(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[3],"uint8"))));       
+                obj.STAT_DATA_MODIFIED(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[2],"uint8"))));    
+                obj.STAT_PMU_TQ(i)=uint8(bin2dec(sprintf('%d',bitget(swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16')),[9 8 7],"uint16"))));
+                obj.STAT_UNLOCKED_TIME(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),[6 5],"uint8"))));    
+                obj.STAT_TRIGGER_REASON(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),[4 3 2 1],"uint8"))));
+                j=j+2;
+
+                for k=1:cnf.PHNMR
+                    if cnf.FORMAT_PHASORS(i)==1 %1 = floating point
+                        if cnf.FORMAT_FORM(i)==1%1 = magnitude and angle (polar)
+                            obj.PHASORS0(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+                            obj.PHASORS1(i,k)=swapbytes(typecast(uint8(frame.Data(j+4:j+7)),'single'));
+                        elseif cnf.FORMAT_FORM(i)==0%0 = phasor real and imaginary (rectangular)
+                            obj.PHASORS0(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+                            obj.PHASORS1(i,k)=swapbytes(typecast(uint8(frame.Data(j+4:j+7)),'single'));
+                        end
+                        j=j+8;
+                    elseif cnf.FORMAT_PHASORS(i)==0%0 = 16-bit integer 
+                        if cnf.FORMAT_FORM(i)==1%1 = magnitude and angle (polar)
+                            obj.PHASORS0(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+                            obj.PHASORS1(i,k)=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'int16'));
+                        elseif cnf.FORMAT_FORM(i)==0%0 = phasor real and imaginary (rectangular)
+                            obj.PHASORS0(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'int16'));
+                            obj.PHASORS1(i,k)=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'int16'));
+                        end
+                        j=j+4;
+                    end
+                end
+                
+                if cnf.FORMAT_FREQ(i)==1% 1 = floating point
+                obj.FREQ(i)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+                obj.DFREQ(i)=swapbytes(typecast(uint8(frame.Data(j+4:j+7)),'single'));
+                j=j+8;
+                elseif cnf.FORMAT_FREQ(i)==0% 0 = 16-bit integer
+                obj.FREQ(i)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'int16'));
+                obj.DFREQ(i)=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'int16'));
+                j=j+4;
+                end
+
+                for k=1:cnf.ANNMR
+                    if cnf.FORMAT_ANALOG(i)==1 %1 = floating point
+                        obj.ANALOG(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+3)),'single'));
+                        j=j+4;
+                    elseif cnf.FORMAT_ANALOG(i)==0%0 = 16-bit integer 
+                        obj.ANALOG(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'int16'));
+                        j=j+2;
+                    end
+                end
+
+                for k=1:cnf.DGNMR
+                    obj.DIGITAL(i,k)=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
+                    j=j+2;
+                end
+
+            end
+            obj.CHK=swapbytes(typecast(uint8(frame.Data(end-1:end)),'uint16'));
         end
 
     end

@@ -2,6 +2,9 @@ classdef CNF_2
     %CNF_2 Summary of this class goes here
     %   Detailed explanation goes here
     properties(Access=public)
+            
+           sha256 char              %Used to determine if new frame has different values
+
                                     %Frame synchronization word.
                                     %Leading byte: AA hex
                                     % Second byte: Frame type and version, divided as follows:
@@ -119,6 +122,8 @@ classdef CNF_2
 
     methods
         function obj = CNF_2(frame)
+            obj.sha256=SHA256(uint8(frame.Data));
+
             obj.SYNCFRAMETYPE=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[7 6 5],"uint8"))));%SYNC TYPE field
             obj.SYNCVERSION=uint8(bin2dec(sprintf('%d',bitget(frame.Data(2),[4 3 2 1],"uint8"))));
             obj.FRAMESIZE=swapbytes(typecast(uint8(frame.Data(3:4)),'uint16'));%FRAMESIZE field
@@ -132,14 +137,14 @@ classdef CNF_2
             j=21;
             for i=1:obj.NUM_PMU
                 obj.STN(i,1:16)=char(uint8(frame.Data(j:j+15)));
-                obj.ID_CODE_DATA(i,1:1)=swapbytes(typecast(uint8(frame.Data(j+16:j+17)),'uint16'));
-                obj.FORMAT_FREQ(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),4,"uint8"))));%SYNC TYPE field
-                obj.FORMAT_ANALOG(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),3,"uint8"))));%SYNC TYPE field 
-                obj.FORMAT_PHASORS(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),2,"uint8"))));%SYNC TYPE field 
-                obj.FORMAT_FORM(i,1:1)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),1,"uint8"))));%SYNC TYPE field 
-                obj.PHNMR(i,1:1)=swapbytes(typecast(uint8(frame.Data(j+20:j+21)),'uint16'));
-                obj.ANNMR(i,1:1)=swapbytes(typecast(uint8(frame.Data(j+22:j+23)),'uint16'));
-                obj.DGNMR(i,1:1)=swapbytes(typecast(uint8(frame.Data(j+24:j+25)),'uint16'));
+                obj.ID_CODE_DATA(i)=swapbytes(typecast(uint8(frame.Data(j+16:j+17)),'uint16'));
+                obj.FORMAT_FREQ(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),4,"uint8"))));%SYNC TYPE field
+                obj.FORMAT_ANALOG(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),3,"uint8"))));%SYNC TYPE field 
+                obj.FORMAT_PHASORS(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),2,"uint8"))));%SYNC TYPE field 
+                obj.FORMAT_FORM(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),1,"uint8"))));%SYNC TYPE field 
+                obj.PHNMR(i)=swapbytes(typecast(uint8(frame.Data(j+20:j+21)),'uint16'));
+                obj.ANNMR(i)=swapbytes(typecast(uint8(frame.Data(j+22:j+23)),'uint16'));
+                obj.DGNMR(i)=swapbytes(typecast(uint8(frame.Data(j+24:j+25)),'uint16'));
 
                 j=j+26;
                 for k=1:obj.PHNMR(i)
@@ -180,5 +185,6 @@ classdef CNF_2
             obj.DATA_RATE=swapbytes(typecast(uint8(frame.Data(j:j+1)),'uint16'));
             obj.CHK=swapbytes(typecast(uint8(frame.Data(j+2:j+3)),'uint16'));
         end
+
     end
 end
