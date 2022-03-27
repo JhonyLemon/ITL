@@ -3,13 +3,13 @@ classdef CNF_2 < ConfigFrame
     %   Detailed explanation goes here
     properties(Access=public)
         
-            PHUNIT_TYPE uint8;      %Conversion factor for phasor channels. Four bytes for each phasor.
+            PHUNIT_TYPE PhasorConversionFactor;      %Conversion factor for phasor channels. Four bytes for each phasor.
             PHUNIT int32;           % Most significant byte: 0―voltage; 1―current.
                                     % Least significant bytes: An unsigned 24-bit word in 10–5 V or amperes per bit to scale
                                     % 16-bit integer data (if transmitted data is in floating-point format, this 24-bit value shall
                                     % be ignored).
 
-            ANUNIT_TYPE uint8;      %Conversion factor for analog channels. Four bytes for each analog value.
+            ANUNIT_TYPE AnalogConversionFactor;      %Conversion factor for analog channels. Four bytes for each analog value.
             ANUNIT int32;           % Most significant byte: 0―single point-on-wave, 1―rms of analog input,
                                     % 2―peak of analog input, 5–64―reserved for future definition; 65–255―user definable.
                                     % Least significant bytes: A signed 24-bit word, user defined scaling.
@@ -53,7 +53,7 @@ classdef CNF_2 < ConfigFrame
                 end
                 for k=1:obj.ANNMR(i)
                     obj.ANUNIT_TYPE=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+1),8,"uint8"))));
-                    if(obj.ANUNIT_TYPE==1)
+                    if obj.ANUNIT_TYPE==AnalogConversionFactor.rmsOfAnalog
                        obj.ANUNIT(i,k)=(-1*(swapbytes(typecast(uint8([0 bitxor(255,frame.Data(j+1:j+3),"uint8")]),'int32'))+1));
                     else
                         obj.ANUNIT(i,k)=swapbytes(typecast(uint8([0 frame.Data(j+1:j+3)]),'int32'));

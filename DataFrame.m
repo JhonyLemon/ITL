@@ -9,18 +9,18 @@ classdef DataFrame < Frame
                                     %                        10 = PMU in test mode (do not use values) or
                                     %                   absent data tags have been inserted (do not use values)
                                     %                        11 = PMU error (do not use values)
-         STAT_PMU_SYNC uint8;       % Bit 13: PMU sync, 0 when in sync with a UTC traceable time source
-         STAT_DATA_SORTING uint8;   % Bit 12: Data sorting, 0 by time stamp, 1 by arrival
-         STAT_PMU_TRIGGER uint8;    % Bit 11: PMU trigger detected, 0 when no trigger
-         STAT_CNF_CHANGE uint8;     % Bit 10: Configuration change, set to 1 for 1 min to advise configuration will change, and
+         STAT_PMU_SYNC Sync;       % Bit 13: PMU sync, 0 when in sync with a UTC traceable time source
+         STAT_DATA_SORTING DataSorting;   % Bit 12: Data sorting, 0 by time stamp, 1 by arrival
+         STAT_PMU_TRIGGER Trigger;    % Bit 11: PMU trigger detected, 0 when no trigger
+         STAT_CNF_CHANGE ConfigurationChange;     % Bit 10: Configuration change, set to 1 for 1 min to advise configuration will change, and
                                     % clear to 0 when change effected.
-         STAT_DATA_MODIFIED uint8;  % Bit 09: Data modified, 1 if data modified by post processing, 0 otherwise
-         STAT_PMU_TQ uint8;         % Bits 08–06: PMU Time Quality. Refer to codes in Table 7.
-         STAT_UNLOCKED_TIME uint8;  % Bits 05–04: Unlocked time: 00 = sync locked or unlocked < 10 s (best quality)
+         STAT_DATA_MODIFIED DataModified;  % Bit 09: Data modified, 1 if data modified by post processing, 0 otherwise
+         STAT_PMU_TQ TimeQuality;         % Bits 08–06: PMU Time Quality. Refer to codes in Table 7.
+         STAT_UNLOCKED_TIME UnlockedTime;  % Bits 05–04: Unlocked time: 00 = sync locked or unlocked < 10 s (best quality)
                                     % \01 = 10 s ≤ unlocked time < 100 s
                                     % 10 = 100 s < unlock time ≤ 1000 s
                                     % 11 = unlocked time > 1000 s
-        STAT_TRIGGER_REASON uint8;  % Bits 03–00: Trigger reason:
+        STAT_TRIGGER_REASON TriggerReason;  % Bits 03–00: Trigger reason:
                                     % 1111–1000: Available for user definition
                                     % 0111: Digital 0110: Reserved
                                     % 0101: df/dt High 0100: Frequency high or low
@@ -67,7 +67,7 @@ classdef DataFrame < Frame
 
     methods
         function obj = DataFrame(frame,cnf,version)
-            obj@Frame(frame);
+            obj@Frame("Frame",frame);
             j=15;
             for i=1:cnf.NUM_PMU
                 obj.STAT_DATA_ERROR(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j),[8 7],"uint8")))); 
@@ -130,6 +130,14 @@ classdef DataFrame < Frame
 
             end
             obj.CHK=swapbytes(typecast(uint8(frame.Data(end-1:end)),'uint16'));
+        end
+
+        function isValid=CheckQuality(obj)
+            isValid=true;
+            if obj.STAT_DATA_ERROR~=0
+                isValid=false;
+                return
+            end
         end
 
     end

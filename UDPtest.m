@@ -21,13 +21,21 @@
 %     end
 % end
 % delete(connection);
-global counter;
+clear all;
 
+addpath("enums\command\");
+addpath("enums\frame\");
+addpath("enums\config\");
+addpath("enums\data\");
 
-counter=0;
 DataQueueRecv=parallel.pool.DataQueue;
 DataQueueSend=parallel.pool.DataQueue;
 DataQueueRecv.afterEach(@(data) DataQueueListener(data));
+cmdType = CommandType.SendCFG_3;
+cmd=CommandFrame(cmdType,42);
+
+DataQueueSend.send(cmd);
+
 
 list=ListOfPMU("IpList","192.168.22.103","IdList",42,"PMUList",PMU(),"PortList",4713,"QueueIn",DataQueueSend,"QueueOut",DataQueueRecv,"Type","UDP");
 
@@ -35,18 +43,19 @@ list=list.ListenForData();
 
 list.delete();
 
-
-
 function DataQueueListener(data)
-global counter;
-                    counter=counter+1;
-                    if counter==60
-                   [u,v] = pol2cart(data.data.PHASORS1,data.data.PHASORS0);
-                   compass(u,v)
-                   drawnow;
-                   counter=0;
-                    end
+    persistent n
+        if isempty(n)
+        n = 0;
         end
+    if n>=30
+        [u,v] = pol2cart(data.data.PHASORS1,data.data.PHASORS0);
+        compass(u,v)
+        drawnow;
+        n=0;
+    end
+    n=n+1;
+end
 
 
 

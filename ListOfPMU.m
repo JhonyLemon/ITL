@@ -8,6 +8,8 @@ classdef ListOfPMU
     TCPconnections;
     QueueIn parallel.pool.DataQueue
     QueueOut parallel.pool.DataQueue
+    cmdList;
+
     end
 
     methods
@@ -23,6 +25,8 @@ classdef ListOfPMU
             end
             obj.QueueIn=NameValueArgs.QueueIn;
             obj.QueueOut=NameValueArgs.QueueOut;
+            obj.cmdList=containers.Map("KeyType",'uint32','ValueType','any');
+            obj.QueueIn.afterEach(@(data) QueueRecv(obj,data));
             obj.ListPMU = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections = containers.Map("KeyType",'uint32','ValueType','any');
@@ -52,15 +56,27 @@ classdef ListOfPMU
             k=keys(obj.UDPconnections);
             while true
                 for i=1:size(obj.UDPconnections)
-                    if obj.UDPconnections(uint32(cell2mat(k(i)))).DatagramsAvailableFcnCount>0
-                        frame=read(obj.UDPconnections(uint32(cell2mat(k(i)))),1,"uint8");
+                    key=uint32(cell2mat(k(i)));
+                    if obj.cmdList.isKey(key) && obj.ListPMU.isKey(key) && ~isempty(obj.ListPMU(key).sourceIP) && ~isempty(obj.ListPMU(key).sourcePort)
+                        cmd=obj.cmdList(key);
+                        for j=1:size(obj.cmdList(key))
+                            write(obj.UDPconnections(key),uint8(cmd(j).ToData()),"uint8",obj.ListPMU(key).sourceIP,obj.ListPMU(key).sourcePort);
+                            %disp("ip "+obj.UDPconnections(key).LocalHost+" port "+obj.UDPconnections(key).LocalPort);
+                        end
+                        obj.cmdList.remove(key);
+                    end
+                    if obj.UDPconnections(key).DatagramsAvailableFcnCount>0
+                        frame=read(obj.UDPconnections(key),1,"uint8");
+                        
                         ID=uint32(swapbytes(typecast(uint8(frame.Data(5:6)),'uint16')));
-                        obj.ListPMU(ID)=obj.ListPMU(ID).InsertFrame(frame);
-                        if obj.ListPMU(ID).isChanged==true
-                            pum=obj.ListPMU(ID);
-                            pum.isChanged=false;    
-                            obj.ListPMU(ID)=pum;
-                            obj.DataChanged(ID);
+                        if obj.ListPMU.isKey(ID)
+                            obj.ListPMU(ID)=obj.ListPMU(ID).InsertFrame(frame);
+                            if obj.ListPMU(ID).isChanged==true
+                                pum=obj.ListPMU(ID);
+                                pum.isChanged=false;    
+                                obj.ListPMU(ID)=pum;
+                                obj.DataChanged(ID);
+                            end
                         end
                     end
                 end
@@ -77,6 +93,19 @@ classdef ListOfPMU
             for i = 1:length(obj.UDPconnections)
                 delete(obj.UDPconnections(uint32(cell2mat(k(i)))));
             end
+            delete(obj.QueueIn);
+            delete(obj.QueueOut);
         end
+
+        function obj=QueueRecv(obj,data)
+            if isKey(obj.cmdList,data.ID_CODE_SOURCE)
+                cmd=obj.cmdList(uint32(data.ID_CODE_SOURCE));
+                obj.cmdList(uint32(data.ID_CODE_SOURCE))=[cmd data];
+            else
+                obj.cmdList(uint32(data.ID_CODE_SOURCE))=[data];
+            end
+
+        end
+
     end
 end

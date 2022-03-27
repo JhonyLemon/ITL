@@ -12,10 +12,10 @@ classdef ConfigFrame < Frame
 
           ID_CODE_DATA int16;   %Data stream ID number
 
-          FORMAT_FREQ uint8;    % 0 = FREQ/DFREQ 16-bit integer, 1 = floating point
-          FORMAT_ANALOG uint8;  % 0 = analogs 16-bit integer, 1 = floating point
-          FORMAT_PHASORS uint8; % 0 = phasors 16-bit integer, 1 = floating point
-          FORMAT_FORM uint8;    % 0 = phasor real and imaginary (rectangular), 1 = magnitude and angle (polar)
+          FORMAT_FREQ FormatFreqDfreq;    % 0 = FREQ/DFREQ 16-bit integer, 1 = floating point
+          FORMAT_ANALOG FormatAnalog;  % 0 = analogs 16-bit integer, 1 = floating point
+          FORMAT_PHASORS FormatPhasors; % 0 = phasors 16-bit integer, 1 = floating point
+          FORMAT_FORM FormatForm;    % 0 = phasor real and imaginary (rectangular), 1 = magnitude and angle (polar)
            
           PHNMR uint16;         %Number of phasors―2-byte integer.
 
@@ -31,7 +31,7 @@ classdef ConfigFrame < Frame
           DIGUNIT0 uint16;      %Mask words for digital status words.
           DIGUNIT1 uint16;      %Mask words for digital status words.
 
-          FNOM uint16;          %Nominal line frequency Bits 15–1: Reserved Bit 0: 1―Fundamental frequency = 50 Hz 0―Fundamental frequency = 60 Hz
+          FNOM LineFrequency;          %Nominal line frequency Bits 15–1: Reserved Bit 0: 1―Fundamental frequency = 50 Hz 0―Fundamental frequency = 60 Hz
           
           CFGCNT uint16;        %Configuration change count is incremented each time a change is made in the PMU
 
@@ -41,7 +41,7 @@ classdef ConfigFrame < Frame
 
     methods
         function obj = ConfigFrame(frame)
-        obj@Frame(frame);
+            obj@Frame("Frame",frame);
         end
     end
 end
