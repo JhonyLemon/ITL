@@ -25,8 +25,9 @@ classdef ListOfPMU
             end
             obj.QueueIn=NameValueArgs.QueueIn;
             obj.QueueOut=NameValueArgs.QueueOut;
-            obj.cmdList=containers.Map("KeyType",'uint32','ValueType','any');
             obj.QueueIn.afterEach(@(data) QueueRecv(obj,data));
+
+            obj.cmdList=containers.Map("KeyType",'uint32','ValueType','any');
             obj.ListPMU = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections = containers.Map("KeyType",'uint32','ValueType','any');
@@ -45,7 +46,9 @@ classdef ListOfPMU
         function obj=openNewUdp(obj,Ip,Port,Id)
             con= udpport("datagram","Ipv4","LocalPort",Port,"LocalHost",Ip,"OutputDatagramSize",65507,"EnablePortSharing",true);
             obj.UDPconnections(uint32(Id))=con;
-            obj.ListPMU(uint32(Id))=PMU();
+            if ~obj.ListPMU.isKey(uint32(Id))
+                obj.ListPMU(uint32(Id))=PMU(Ip,Port,Id);
+            end
         end
 
         function obj=openNewTcp(obj,Ip,Port,Id)
@@ -98,14 +101,15 @@ classdef ListOfPMU
         end
 
         function obj=QueueRecv(obj,data)
-            if isKey(obj.cmdList,data.ID_CODE_SOURCE)
+            if obj.cmdList.isKey(uint32(data.ID_CODE_SOURCE))
                 cmd=obj.cmdList(uint32(data.ID_CODE_SOURCE));
                 obj.cmdList(uint32(data.ID_CODE_SOURCE))=[cmd data];
             else
-                obj.cmdList(uint32(data.ID_CODE_SOURCE))=[data];
+                obj.cmdList(uint32(data.ID_CODE_SOURCE))=data;
             end
 
         end
+
 
     end
 end

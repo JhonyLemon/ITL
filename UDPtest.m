@@ -23,6 +23,7 @@
 % delete(connection);
 clear all;
 
+addpath("enums\");
 addpath("enums\command\");
 addpath("enums\frame\");
 addpath("enums\config\");
@@ -31,13 +32,13 @@ addpath("enums\data\");
 DataQueueRecv=parallel.pool.DataQueue;
 DataQueueSend=parallel.pool.DataQueue;
 DataQueueRecv.afterEach(@(data) DataQueueListener(data));
-cmdType = CommandType.SendCFG_3;
-cmd=CommandFrame(cmdType,42);
 
-DataQueueSend.send(cmd);
+%cmd=CommandFrame(CommandType.SendCFG_3,42);
+
+%DataQueueSend.send(cmd);
 
 
-list=ListOfPMU("IpList","192.168.22.103","IdList",42,"PMUList",PMU(),"PortList",4713,"QueueIn",DataQueueSend,"QueueOut",DataQueueRecv,"Type","UDP");
+list=ListOfPMU("IpList","192.168.22.103","IdList",42,"PMUList",PMU("192.168.22.103",4713,42,"CommunicationType","SpontaneousUDP"),"PortList",4713,"QueueIn",DataQueueSend,"QueueOut",DataQueueRecv,"Type","UDP");
 
 list=list.ListenForData();
 

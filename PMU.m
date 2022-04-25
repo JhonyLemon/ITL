@@ -5,17 +5,36 @@ classdef PMU
     properties(Access=public)
         sourceIP string;
         sourcePort uint16;
+        LocalHost string;
+        LocalPort uint16;
+        ID uint16;
         cnf_version uint8=0;
+        cnf3 CNF_3;
         cnf ConfigFrame;
         data DataFrame;
         cmd CommandFrame;
         header HeaderFrame;
+        CommunicationType CommunicationTypes=CommunicationTypes.SpontaneousUDP;
+        UDPconnection;
+        TCPconnection;
         isChanged;
     end
 
     methods
-        function obj=PMU()
+        function obj=PMU(IP,Port,ID,NameValueArgs)
+            arguments
+                IP string
+                Port uint16
+                ID uint16
+                NameValueArgs.CommunicationType CommunicationTypes
+            end
             obj.isChanged=false;
+            obj.ID=ID;
+            obj.LocalHost=IP;
+            obj.LocalPort=Port;
+            if isfield(NameValueArgs,"CommunicationType")
+                obj.CommunicationType=NameValueArgs.CommunicationType;
+            end
         end
 
         function obj=InsertFrame(obj,frame)
@@ -64,8 +83,12 @@ classdef PMU
 
         function id=GetID(obj)
             id=null;
-            if(obj.cnf_version~=0)
-                id=obj.cnf.ID_CODE_SOURCE;
+            if isempty(obj.ID)
+                if(obj.cnf_version~=0)
+                    id=obj.cnf.ID_CODE_SOURCE;
+                end
+            else
+                id=obj.ID;
             end
         end
 
@@ -76,7 +99,6 @@ classdef PMU
                     isEq=true;
                 end
             end
-        end
-   
+        end   
     end
 end
