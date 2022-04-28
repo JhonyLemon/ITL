@@ -38,7 +38,7 @@ DataQueueRecv.afterEach(@(data) DataQueueListener(data));
 %DataQueueSend.send(cmd);
 
 
-list=ListOfPMU("IpList","192.168.22.103","IdList",42,"PMUList",PMU("192.168.22.103",4713,42,"CommunicationType","SpontaneousUDP"),"PortList",4713,"QueueIn",DataQueueSend,"QueueOut",DataQueueRecv,"Type","UDP");
+list=ListOfPMU("PMUList",PMU("192.168.22.103",4713,42,"CommunicationType","SpontaneousUDP"),"QueueIn",DataQueueSend,"QueueOut",DataQueueRecv);
 
 list=list.ListenForData();
 
