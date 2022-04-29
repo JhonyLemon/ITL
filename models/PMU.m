@@ -1,4 +1,4 @@
-classdef PMU
+classdef PMU < handle
     %Class for holding data recived from UDP datagram
     %   Class contains PMU configuration and data 
 
@@ -37,7 +37,7 @@ classdef PMU
             end
         end
 
-        function obj=InsertFrame(obj,frame)
+        function InsertFrame(obj,frame)
             obj.sourceIP=frame.SenderAddress;
             obj.sourcePort=frame.SenderPort;
             if crc_16_CCITT_8bit(frame.Data(1:end-2))==swapbytes(typecast(uint8(frame.Data(end-1:end)),'uint16'))

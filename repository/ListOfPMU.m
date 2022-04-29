@@ -1,4 +1,4 @@
-classdef ListOfPMU
+classdef ListOfPMU < handle
     %UNTITLED4 Summary of this class goes here
     %   Detailed explanation goes here
 
@@ -21,31 +21,25 @@ classdef ListOfPMU
         end
 
         function openNewUdp(obj,PMU)
-            disp("UDP size:"+size(obj.UDPconnections));
                 for i=1:size(obj.UDPconnections)
                     disp(true);
                     disp(~strcmp(obj.UDPconnections(i).LocalHost,PMU.LocalHost));
                     disp(obj.UDPconnections(i).LocalPort~=PMU.LocalPort);
                     if ~strcmp(obj.UDPconnections(i).LocalHost,PMU.LocalHost) || obj.UDPconnections(i).LocalPort~=PMU.LocalPort
-                        disp("New connection");
                         con= udpport("datagram","Ipv4","LocalPort",PMU.LocalPort,"LocalHost",PMU.LocalHost,"OutputDatagramSize",65507,"EnablePortSharing",true);
-                        obj.UDPconnections(end+1)=con;
                         con.configureCallback("datagram",1,@(src,evt) UdpCallback(obj,src,evt));
+                        obj.UDPconnections(end+1)=con;
                         break;
                     end
                 end
-            disp("UDP size:"+size(obj.UDPconnections));
         end
 
         function UdpCallback(obj,src,~)
-                disp("Data avaliable");
                 frame=read(src,1,"uint8");%read data from socket
                 ID=uint32(swapbytes(typecast(uint8(frame.Data(5:6)),'uint16')));%check ID of recived frame
                 if obj.ListPMU.isKey(ID)%if ID from frame is in map
-                    obj.ListPMU(ID)=obj.ListPMU(ID).InsertFrame(frame);%parse frame
-                    disp("New data");
-                elseif obj.CheckIfUsed(src)
-                    delete(src);
+                    handle=obj.ListPMU(ID);
+                    handle.InsertFrame(frame);%parse frame
                 end
         end
         
@@ -82,6 +76,25 @@ classdef ListOfPMU
         end
 
         function DeletePMU(obj,ID)
+            isUsed=false;
+            k=0;
+            for i=1:size(obj.UDPconnections)
+                
+                if strcmp(obj.ListPMU(ID).LocalHost,obj.UDPconnections(i).LocalHost) && obj.ListPMU(ID).LocalPost==obj.UDPconnections(i).LocalPost
+                   k=i;
+                   k=keys(obj.ListPMU);
+                   for j=1:size(obj.ListPMU)
+                        key=uint32(cell2mat(k(j)));
+                        if ~strcmp(obj.ListPMU(key).LocalHost,obj.UDPconnections(i).LocalHost) && obj.ListPMU(key).LocalPost~=obj.UDPconnections(i).LocalPost
+                            isUsed=true;
+                            break;
+                        end
+                   end
+                end
+            end
+            if isUsed==false
+                delete(obj.UDPconnections(k));
+            end
             delete(obj.ListPMU(ID));
         end
      end
