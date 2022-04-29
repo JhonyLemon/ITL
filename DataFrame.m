@@ -58,7 +58,7 @@ classdef DataFrame < Frame
 
         ANALOG;                     %Analog word. 16-bit integer. It could be sampled data such as control signal or
                                     %transducer value. Values and ranges defined by user.
-                                    %Can be 16-bit integer or IEEE floating point. Data type indicated by the FORMAT field
+                                    %Can be 16-bi   t integer or IEEE floating point. Data type indicated by the FORMAT field
                                     %in configuration 1, 2, and 3 frames
 
         DIGITAL uint16;             %Digital status word. It could be bit mapped status or flag. Values and ranges defined by

@@ -29,34 +29,36 @@ addpath("enums\frame\");
 addpath("enums\config\");
 addpath("enums\data\");
 
-DataQueueRecv=parallel.pool.DataQueue;
-DataQueueSend=parallel.pool.DataQueue;
-DataQueueRecv.afterEach(@(data) DataQueueListener(data));
+% DataQueueRecv=parallel.pool.DataQueue;
+% DataQueueSend=parallel.pool.DataQueue;
+% DataQueueRecv.afterEach(@(data) DataQueueListener(data));
 
 %cmd=CommandFrame(CommandType.SendCFG_3,42);
 
 %DataQueueSend.send(cmd);
 
 
-list=ListOfPMU("PMUList",PMU("192.168.22.103",4713,42,"CommunicationType","SpontaneousUDP"),"QueueIn",DataQueueSend,"QueueOut",DataQueueRecv);
+% handle = ListOfPMU([PMU("192.168.22.103",4713,42,"CommunicationType",CommunicationTypes.SpontaneousUDP)]);
+% while true
+% end
+% handle.delete();
 
-list=list.ListenForData();
 
-list.delete();
 
-function DataQueueListener(data)
-    persistent n
-        if isempty(n)
-        n = 0;
-        end
-    if n>=30
-        [u,v] = pol2cart(data.data.PHASORS1,data.data.PHASORS0);
-        compass(u,v)
-        drawnow;
-        n=0;
-    end
-    n=n+1;
-end
+
+% function DataQueueListener(data)
+%     persistent n
+%         if isempty(n)
+%         n = 0;
+%         end
+%     if n>=30
+%         [u,v] = pol2cart(data.data.PHASORS1,data.data.PHASORS0);
+%         compass(u,v)
+%         drawnow;
+%         n=0;
+%     end
+%     n=n+1;
+% end
 
 
 
