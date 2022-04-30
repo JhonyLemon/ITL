@@ -45,5 +45,9 @@ classdef PolarPlots < handle
                 end
                 obj.HandleToPlot.UpdatePolarPlot(data.data.PHASORS1(1,1),angle);
         end
+
+        function delete(obj)
+            delete(obj.HandleToPlot);
+        end
     end
 end

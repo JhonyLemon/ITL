@@ -82,7 +82,7 @@ classdef ListOfPMU < handle
             for i=1:columns
                 handle=obj.ListPMU(ID);
                 if strcmp(handle.LocalHost,obj.UDPconnections(1,i).LocalHost) && handle.LocalPort==obj.UDPconnections(1,i).LocalPort
-                   m=i;
+                   k=i;
                    k=keys(obj.ListPMU);
                    for j=1:size(obj.ListPMU)
                         key=uint32(cell2mat(k(j)));
@@ -94,10 +94,10 @@ classdef ListOfPMU < handle
                    end
                 end
             end
-            if isUsed==false && m~=0
-                delete(obj.UDPconnections(1,m));
+            if isUsed==false && uint32~=0
+                delete(obj.UDPconnections(1,k));
             end
-                remove(obj.ListPMU,ID);
+            delete(obj.ListPMU(ID));
         end
      end
 
