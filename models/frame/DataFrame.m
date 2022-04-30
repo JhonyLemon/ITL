@@ -134,10 +134,10 @@ classdef DataFrame < Frame
 
         function isValid=CheckQuality(obj)
             isValid=true;
-            if obj.STAT_DATA_ERROR~=0
-                isValid=false;
-                return
-            end
+          %  if ~(obj.STAT_DATA_ERROR==0 || obj.STAT_DATA_ERROR==1)
+          %      isValid=false;
+          %      return
+          %  end
         end
 
     end
