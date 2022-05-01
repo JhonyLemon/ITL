@@ -19,10 +19,13 @@ classdef Frame
                                     % Version 1 (0001) for messages defined in IEEE Std C37.118-2005 [B6].
                                     % Version 2 (0010) for messages added in this revision,
                                     % IEEE Std C37.118.2-2011.
+
         
            FRAMESIZE uint16;        %Total number of bytes in the frame, including CHK.
                                     %16-bit unsigned number. Range = maximum 65535
         
+
+
            ID_CODE_SOURCE uint16;   %Data stream ID number, 16-bit integer, assigned by user, 1–65534 (0 and 65535 are
                                     % reserved). Identifies destination data stream for commands and source data stream
                                     % for other messages. A stream will be hosted by a device that can be physical or
@@ -35,11 +38,17 @@ classdef Frame
                                     % Range is 136 years, rolls over 2106 AD.
                                     % Leap seconds are not included in count, so each year has the same number of
                                     % seconds except leap years, which have an extra day (86 400 s)
+
+                                    
         
             MTQ_L_S_DIRECTION LeapSecondDirection;%Leap Second Direction―0 for add, 1 for delete
             MTQ_L_S_OCCURRED LeapSecondOccurred; %Leap Second Occurred―set in the first second after the leap second occurs and remains set for 24 h
             MTQ_L_S_PENDING LeapSecondPending;  %Leap Second Pending―shall be set not more than 60 s nor less than 1 s before a leap second occurs, and cleared in the second after the leap second occurs
             MTQ_L_S_INDICATOR MessageTimeQuality;%Message Time Quality indicator code
+
+
+
+
             FRACSEC uint32;         %24-bit integer number. When divided by TIME_BASE yields the actual fractional second. FRACSEC used in all messages to and from a given PMU shall use the same TIME_BASE that is provided in the configuration message from that PMU.
         
             CHK uint16;             %CRC-CCITT, 16-bit unsigned integer
@@ -50,7 +59,7 @@ classdef Frame
             arguments
                 NameValueArgs.Frame
             end
-            if isfield(NameValueArgs,'frame')
+            if isfield(NameValueArgs,'Frame')
                 obj.SYNCFRAMETYPE=uint8(bin2dec(sprintf('%d',bitget(NameValueArgs.Frame.Data(2),[7 6 5],"uint8"))));%SYNC TYPE field
                 obj.SYNCVERSION=uint8(bin2dec(sprintf('%d',bitget(NameValueArgs.Frame.Data(2),[4 3 2 1],"uint8"))));
                 obj.FRAMESIZE=swapbytes(typecast(uint8(NameValueArgs.Frame.Data(3:4)),'uint16'));%FRAMESIZE field

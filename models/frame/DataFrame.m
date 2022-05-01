@@ -14,12 +14,19 @@ classdef DataFrame < Frame
          STAT_PMU_TRIGGER Trigger;    % Bit 11: PMU trigger detected, 0 when no trigger
          STAT_CNF_CHANGE ConfigurationChange;     % Bit 10: Configuration change, set to 1 for 1 min to advise configuration will change, and
                                     % clear to 0 when change effected.
+                                    
          STAT_DATA_MODIFIED DataModified;  % Bit 09: Data modified, 1 if data modified by post processing, 0 otherwise
          STAT_PMU_TQ TimeQuality;         % Bits 08–06: PMU Time Quality. Refer to codes in Table 7.
+
+
+
          STAT_UNLOCKED_TIME UnlockedTime;  % Bits 05–04: Unlocked time: 00 = sync locked or unlocked < 10 s (best quality)
-                                    % \01 = 10 s ≤ unlocked time < 100 s
+                                    % 01 = 10 s ≤ unlocked time < 100 s
                                     % 10 = 100 s < unlock time ≤ 1000 s
                                     % 11 = unlocked time > 1000 s
+
+
+
         STAT_TRIGGER_REASON TriggerReason;  % Bits 03–00: Trigger reason:
                                     % 1111–1000: Available for user definition
                                     % 0111: Digital 0110: Reserved
@@ -63,6 +70,8 @@ classdef DataFrame < Frame
 
         DIGITAL uint16;             %Digital status word. It could be bit mapped status or flag. Values and ranges defined by
                                     %user.
+
+                                    
     end
 
     methods
@@ -131,14 +140,5 @@ classdef DataFrame < Frame
             end
             obj.CHK=swapbytes(typecast(uint8(frame.Data(end-1:end)),'uint16'));
         end
-
-        function isValid=CheckQuality(obj)
-            isValid=true;
-          %  if ~(obj.STAT_DATA_ERROR==0 || obj.STAT_DATA_ERROR==1)
-          %      isValid=false;
-          %      return
-          %  end
-        end
-
     end
 end

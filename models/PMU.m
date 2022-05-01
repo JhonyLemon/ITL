@@ -48,10 +48,8 @@ classdef PMU < handle
                            if ~obj.IsEqual(obj.data,sha)
                                 data=DataFrame(frame,obj.cnf,obj.cnf_version);
                                 data.sha256=sha;
-                                if data.CheckQuality()==true
                                 obj.data=data;
                                 obj.isChanged=true;
-                                end
                            end
                        end
                    case 1%Header Frame

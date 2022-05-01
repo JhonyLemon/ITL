@@ -96,6 +96,8 @@ classdef CNF_3 < ConfigFrame
                                 % the measurement.)
     end
 
+
+
     methods
         function obj = CNF_3(frame)
             obj@ConfigFrame(frame);
