@@ -38,8 +38,8 @@ classdef PolarPlots < handle
 
         function isValid=CheckQuality(obj)
             isValid=true;
-            if ~isempty(obj.data.data) && ~isempty(obj.data.data.STAT_DATA_ERROR)
-                if ~(obj.data.data.STAT_DATA_ERROR==0 || obj.data.data.STAT_DATA_ERROR==1)
+            if ~isempty(obj.data.data) && ~isempty(obj.data.data.STAT_DATA_ERROR) && ~isempty(obj.data.data.STAT_PMU_SYNC)
+                if ~((obj.data.data.STAT_DATA_ERROR==0 || obj.data.data.STAT_DATA_ERROR==1) && obj.data.data.STAT_PMU_SYNC==0)
                     isValid=false;
                     return
                 end

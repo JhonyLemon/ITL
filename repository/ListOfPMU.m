@@ -5,6 +5,8 @@ classdef ListOfPMU < handle
     properties  
     ListPMU; % map of PMU devices that we listen for
     UDPconnections% used to handle UDP connections
+    PMUdetails
+    DeviceID
 %     TCPconnections;% used to handle TCP connections
 %     cmdList;% map of commands that needs to be send currently not used
 
@@ -14,12 +16,16 @@ classdef ListOfPMU < handle
         function obj = ListOfPMU()
             obj.ListPMU = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections=ConnectionHolder.empty;
+            obj.PMUdetails=DeviceDetailsHolder();
         end
 
         function openNewUdp(obj,PMU)
             DoWeNeedNewPort=true;
             handleForSocket=[];
             for i=1:size(obj.UDPconnections)
+                if isempty(obj.UDPconnections)
+                    break;
+                end
                 handle = obj.UDPconnections(i);
                 if strcmp(handle.Connection.LocalHost,PMU.LocalHost) && handle.Connection.LocalPort==PMU.LocalPort
                     DoWeNeedNewPort=false;
@@ -43,7 +49,23 @@ classdef ListOfPMU < handle
                 if obj.ListPMU.isKey(ID)%if ID from frame is in map
                     handle=obj.ListPMU(ID);
                     handle.InsertFrame(frame);%parse frame
+                    if obj.DeviceID==ID
+                        if ~isempty(handle.data)
+                            handleData=handle.data;
+                            obj.PMUdetails.SOC(end+1)=handleData.SOC;
+                            obj.PMUdetails.FREQ(end+1)=handleData.FREQ;
+                            obj.PMUdetails.DFREQ(end+1)=handleData.DFREQ;
+                            obj.PMUdetails.PHASORS0(end+1)=handleData.PHASORS0;
+                            obj.PMUdetails.PHASORS1(end+1)=handleData.PHASORS1;
+                            obj.PMUdetails.ANALOG(end+1)=handleData.ANALOG;
+                        end
+                    end
                 end
+        end
+
+        function SetDeviceID(obj,ID)
+           obj.PMUdetails=DeviceDetailsHolder();
+           obj.DeviceID=ID;
         end
         
         function AddNewPMU(obj,PMU)
@@ -58,9 +80,7 @@ classdef ListOfPMU < handle
         end
 
         function delete(obj)
-            for i = 1:size(obj.UDPconnections)
-                delete(obj.UDPconnections(i));
-            end
+            delete(obj.UDPconnections);
             delete(obj.ListPMU);
         end
 
