@@ -53,11 +53,11 @@ classdef ListOfPMU < handle
                         if ~isempty(handle.data)
                             handleData=handle.data;
                             obj.PMUdetails.SOC(end+1)=handleData.SOC;
-                            obj.PMUdetails.FREQ(end+1)=handleData.FREQ;
-                            obj.PMUdetails.DFREQ(end+1)=handleData.DFREQ;
-                            obj.PMUdetails.PHASORS0(end+1)=handleData.PHASORS0;
-                            obj.PMUdetails.PHASORS1(end+1)=handleData.PHASORS1;
-                            obj.PMUdetails.ANALOG(end+1)=handleData.ANALOG;
+                            obj.PMUdetails.FREQ(end+1,:)=handleData.FREQ;
+                            obj.PMUdetails.DFREQ(end+1,:)=handleData.DFREQ;
+                            obj.PMUdetails.PHASOR0(end+1,:,:)=handleData.PHASORS0;
+                            obj.PMUdetails.PHASOR1(end+1,:,:)=handleData.PHASORS1;
+                            obj.PMUdetails.ANALOG(end+1,:,:)=handleData.ANALOG;
                         end
                     end
                 end
