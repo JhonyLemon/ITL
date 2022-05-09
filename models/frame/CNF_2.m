@@ -23,7 +23,7 @@ classdef CNF_2 < ConfigFrame
             obj.NUM_PMU=swapbytes(typecast(uint8(frame.Data(19:20)),'uint16'));
             j=21;
             for i=1:obj.NUM_PMU
-                obj.STN(i,1:16)=char(uint8(frame.Data(j:j+15)));
+                obj.STN(i,:)=char(strip(replace(string(char(uint8(frame.Data(j:j+15)))),char(0x00),' ')));
                 obj.ID_CODE_DATA(i)=swapbytes(typecast(uint8(frame.Data(j+16:j+17)),'uint16'));
                 obj.FORMAT_FREQ(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),4,"uint8"))));%SYNC TYPE field
                 obj.FORMAT_ANALOG(i)=uint8(bin2dec(sprintf('%d',bitget(frame.Data(j+19),3,"uint8"))));%SYNC TYPE field 
@@ -35,15 +35,15 @@ classdef CNF_2 < ConfigFrame
 
                 j=j+26;
                 for k=1:obj.PHNMR(i)
-                   obj.CHNAM_PHNMR(i,k)=strtrim(string(char(uint8(frame.Data(j:j+15)))));
+                   obj.CHNAM_PHNMR(i,k)=strip(replace(string(char(uint8(frame.Data(j:j+15)))),char(0x00),' '));
                    j=j+16;
                 end
                 for k=1:obj.ANNMR(i)
-                   obj.CHNAM_ANNMR(i,k)=strtrim(string(char(uint8(frame.Data(j:j+15)))));
+                   obj.CHNAM_ANNMR(i,k)=strip(replace(string(char(uint8(frame.Data(j:j+15)))),char(0x00),' '));
                    j=j+16;
                 end
                 for k=1:obj.DGNMR(i)
-                   obj.CHNAM_DGNMR(i,k)=strtrim(string(char(uint8(frame.Data(j:j+(16*16-1))))));
+                   obj.CHNAM_DGNMR(i,k)=strip(replace(string(char(uint8(frame.Data(j:j+15)))),char(0x00),' '));
                    j=j+16*16;
                 end
                 for k=1:obj.PHNMR(i)
