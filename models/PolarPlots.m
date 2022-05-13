@@ -8,6 +8,8 @@ classdef PolarPlots < handle
         ExtraAngle=0
         IsValid=true;
         data PMU
+        mag
+        ang
         ID
         STN
         index=0
@@ -81,7 +83,8 @@ classdef PolarPlots < handle
                                 end
                             end
                     end
-                
+                    obj.mag=mag;
+                    obj.ang=ang;
                     obj.HandleToPlot.UpdatePolarPlot(mag,ang);
 
                     obj.IsValid=obj.CheckQuality();

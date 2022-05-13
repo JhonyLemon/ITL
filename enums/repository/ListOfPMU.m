@@ -58,13 +58,12 @@ classdef ListOfPMU < handle
                         end
                     elseif handle.cnf_version == 3
                     end
-                        if ~isempty(obj.DeviceID) && ~isempty(handle.data) && obj.DeviceID==ID
+                        if ~isempty(obj.DeviceID) && ~isempty(handle.data)
                             if isKey(obj.PolarPlotsMap,obj.DeviceID)
                                 handleToSubMap=obj.PolarPlotsMap(obj.DeviceID);
                                 if isKey(handleToSubMap,obj.DeviceSTN)
                                     handleData=handle.data;
                                     obj.PMUdetails.SOC(end+1)=handleData.SOC;
-                                    keu=keys(handleData.FREQ);
                                     obj.PMUdetails.FREQ(end+1)=handleData.FREQ(obj.DeviceSTN);
                                     obj.PMUdetails.DFREQ(end+1)=handleData.DFREQ(obj.DeviceSTN);
 
