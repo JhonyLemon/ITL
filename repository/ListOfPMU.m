@@ -64,14 +64,25 @@ classdef ListOfPMU < handle
                                 if isKey(handleToSubMap,obj.DeviceSTN)
                                     handleData=handle.data;
                                     obj.PMUdetails.SOC(end+1)=handleData.SOC;
-                                    keu=keys(handleData.FREQ);
-                                    obj.PMUdetails.FREQ(end+1)=handleData.FREQ(obj.DeviceSTN);
-                                    obj.PMUdetails.DFREQ(end+1)=handleData.DFREQ(obj.DeviceSTN);
+
+                                    freq=[];
+                                    if isKey(obj.PMUdetails.FREQ,obj.DeviceSTN)
+                                        freq=obj.PMUdetails.FREQ(obj.DeviceSTN);
+                                    end
+                                    freq(end+1)=handleData.FREQ(obj.DeviceSTN);
+                                    obj.PMUdetails.FREQ(obj.DeviceSTN)=freq;
+
+                                    dfreq=[];
+                                    if isKey(obj.PMUdetails.DFREQ,obj.DeviceSTN)
+                                        dfreq=obj.PMUdetails.DFREQ(obj.DeviceSTN);
+                                    end
+                                    dfreq(end+1)=handleData.DFREQ(obj.DeviceSTN);
+                                    obj.PMUdetails.DFREQ(obj.DeviceSTN)=dfreq;
+                    
 
                                     phs0=handleData.PHASORS0(obj.DeviceSTN);
                                     phs1=handleData.PHASORS1(obj.DeviceSTN);
                                     ana=handleData.ANALOG(obj.DeviceSTN);
-%fix
 
                                    k1=keys(phs0);
                                    for j=1:size(phs0)

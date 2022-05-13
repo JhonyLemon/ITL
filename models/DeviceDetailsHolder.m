@@ -14,11 +14,11 @@ classdef DeviceDetailsHolder < handle
     methods
         function obj = DeviceDetailsHolder()
             obj.SOC=datetime.empty();
-            obj.FREQ=[];
-            obj.DFREQ=[];
-            obj.PHASOR0=[];
-            obj.PHASOR1=[];
-            obj.ANALOG=[];
+            obj.FREQ=containers.Map("KeyType",'char','ValueType','any');
+            obj.DFREQ=containers.Map("KeyType",'char','ValueType','any');
+            obj.PHASOR0=containers.Map("KeyType",'char','ValueType','any');
+            obj.PHASOR1=containers.Map("KeyType",'char','ValueType','any');
+            obj.ANALOG=containers.Map("KeyType",'char','ValueType','any');
         end
 
         function delete(obj)
