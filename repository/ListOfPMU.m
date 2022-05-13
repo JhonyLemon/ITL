@@ -52,6 +52,10 @@ classdef ListOfPMU < handle
                 if obj.ListPMU.isKey(ID)%if ID from frame is in map
                     handle=obj.ListPMU(ID);
                     handle.InsertFrame(frame);%parse frame
+                    %%
+                    
+                    %Wpis do bazy
+                    %%
                     if handle.cnf_version==2 || handle.cnf_version==1
                         if ~isempty(handle.cnf)
                             obj.CreateNewPlot(handle.cnf);
