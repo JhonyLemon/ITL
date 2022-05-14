@@ -91,35 +91,31 @@ classdef ListOfPMU < handle
                                    k1=keys(phs0);
                                    for j=1:size(phs0)
                                         key1=char(cell2mat(k1(j)));
-                                        [row,col]=size(obj.PMUdetails.PHASOR0);
-                                        if row>=j && col>0 && obj.PMUdetails.PHASOR0(j,end)==0
-                                            obj.PMUdetails.PHASOR0(j,end)=phs0(key1);
-                                        elseif row<j && col==1
-                                            obj.PMUdetails.PHASOR0(j,end)=phs0(key1);
-                                        else
-                                            obj.PMUdetails.PHASOR0(j,end+1)=phs0(key1);
+                                        phasor0=[];
+                                        phasor1=[];
+                                        if isKey(obj.PMUdetails.PHASOR0,key1)
+                                            phasor0=obj.PMUdetails.PHASOR0(key1);
                                         end
-                                        [row,col]=size(obj.PMUdetails.PHASOR1);
-                                        if row>=j && col>0 && obj.PMUdetails.PHASOR1(j,end)==0
-                                            obj.PMUdetails.PHASOR1(j,end)=phs1(key1);
-                                        elseif row<j && col==1
-                                            obj.PMUdetails.PHASOR1(j,end)=phs1(key1);
-                                        else
-                                            obj.PMUdetails.PHASOR1(j,end+1)=phs1(key1);
+                                        if isKey(obj.PMUdetails.PHASOR1,key1)
+                                            phasor1=obj.PMUdetails.PHASOR1(key1);
                                         end
+
+                                         phasor0(end+1)=phs0(key1);
+                                         phasor1(end+1)=phs1(key1);
+
+                                         obj.PMUdetails.PHASOR0(key1)=phasor0;
+                                         obj.PMUdetails.PHASOR1(key1)=phasor0;
                                    end
 
                                    k1=keys(ana);
                                    for j=1:size(ana)
                                         key1=char(cell2mat(k1(j)));
-                                        [row,col]=size(obj.PMUdetails.ANALOG);
-                                        if row>=j && col>0 && obj.PMUdetails.ANALOG(j,end)==0
-                                            obj.PMUdetails.ANALOG(j,end)=ana(key1);
-                                        elseif row<j && col==1
-                                            obj.PMUdetails.ANALOG(j,end)=ana(key1);
-                                        else
-                                            obj.PMUdetails.ANALOG(j,end+1)=ana(key1);
+                                        analog=[];
+                                        if isKey(obj.PMUdetails.ANALOG,key1)
+                                            analog=obj.PMUdetails.ANALOG(key1);
                                         end
+                                        analog(end+1)=ana(key1);
+                                        obj.PMUdetails.ANALOG(key1)=analog;
                                    end
                                 end
                             end
