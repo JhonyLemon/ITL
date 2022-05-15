@@ -53,8 +53,33 @@ classdef ListOfPMU < handle
                     handle=obj.ListPMU(ID);
                     handle.InsertFrame(frame);%parse frame
                     %%
-                    
                     %Wpis do bazy
+
+%                     dbFile = "bazaITL.db";
+%                     tableNameSame = "DataSame";
+%                     tableNameDiff = "DataDiff";
+%                     if isfile(dbFile)
+%                         connection = sqlite(dbFile, "connect");
+%                     else
+%                         connection = sqlite(dbFile, "create");
+%                     end
+% 
+%                     connection.AutoCommit = 'on';
+% 
+%                     pmuCount = (daneWramce-5)/6; %(LICZBA_DANYCH-DANE_STATYCZNE)/DANE_ZMIENNNE
+%                     
+%                     %Writring 1-5
+%                     %data = table(1,2,3,4,5,'VariableNames',["SYNC" "FRAMESIZE" "IDCODE" "SOC" "FRACSEC"]);
+%                     %connection.sqlwrite(tableNameDiff, data);
+% 
+%                     %Writring 6+
+%                     for i = 0:(pmuCount-1)
+%                         %data = table(i*6+6,i*6+7,i*6+8,i*6+9,i*6+10,i*6+11,'VariableNames',["STAT" "PHASORS" "FREQ" "DFREQ" "ANALOG" "DIGITAL"]);
+%                         %connection.sqlwrite(tableNameSame, data);
+%                     end
+%                                         
+%                     connection.close();
+
                     %%
                     if handle.cnf_version==2 || handle.cnf_version==1
                         if ~isempty(handle.cnf)
