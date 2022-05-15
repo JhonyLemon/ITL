@@ -1,4 +1,14 @@
 function DrawOnGeoPlot(handle,latitude,longitude,angle,magnitude,latLim,lonLim)
+% Used to draw arrows on geoaxes
+arguments
+    handle
+    latitude
+    longitude
+    angle
+    magnitude
+    latLim
+    lonLim
+end
     if ishandle(handle) 
         if isvalid(handle) && size(latitude,2)==size(longitude,2) && size(longitude,2)==size(angle,2)
             N=size(latitude,2);
