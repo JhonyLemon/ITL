@@ -31,7 +31,7 @@ end
     items=cell(1,k);
     k0=keys(app.MapOfAdded);
     for i=1:size(app.MapOfAdded)
-       key0=char(cell2mat(k0(j)));
+       key0=char(cell2mat(k0(i)));
        items{1,k}=key0;
        k=k+1;
     end

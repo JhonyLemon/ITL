@@ -17,7 +17,9 @@ end
                         key1=char(cell2mat(k1(m)));
                         subplot(k,1,l);
                         y=app.DataProvider.PMUdetails.ANALOG(key1);
-                        plot(x,y,"Color",[0 0 0],"LineWidth",1);
+                        if(size(x)==size(y))
+                            plot(x,y,"Color",[0 0 0],"LineWidth",1);
+                        end
                         l=l+1;
                         title(string(app.DataProvider.DeviceSTN)+"-"+string(key1));
                      end

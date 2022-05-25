@@ -13,6 +13,7 @@ classdef ListOfPMU < handle
     dbFile
     connection
     dbTemp
+    pool
 
     end
 
@@ -23,7 +24,7 @@ classdef ListOfPMU < handle
             obj.ListPMU = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections=ConnectionHolder.empty;
             obj.PMUdetails=DeviceDetailsHolder();
-
+            obj.pool=parpool(2);
             
                      obj.dbFile = "bazaITL.db";
                      if isfile(obj.dbFile)
@@ -69,11 +70,11 @@ classdef ListOfPMU < handle
                     %%
                     %Wpis do bazy
                 if ~isempty(handle.data)
-                     obj.dbTemp(end+1)=handle.data;
-                     if(size(obj.dbTemp,2)>10)
-                         DataBaseWrite(obj.connection,obj.dbTemp);
-                         obj.dbTemp=DataFrame.empty;
-                     end
+                    obj.dbTemp(end+1)=handle.data;
+                    if(size(obj.dbTemp,2)>5000)
+                    DataBaseWrite(obj.connection,obj.dbTemp);
+                    obj.dbTemp=DataFrame.empty;
+                    end
                 end
                     %%
                     if handle.cnf_version==2 || handle.cnf_version==1
@@ -200,10 +201,9 @@ classdef ListOfPMU < handle
 
         function delete(obj)
             delete(obj.UDPconnections);
-            if(size(obj.dbTemp,2)>0)
-                DataBaseWrite(obj.connection,obj.dbTemp);
-            end
+            if
             obj.connection.close()
+            delete(gcp('nocreate'));
             delete(obj.ListPMU);
         end
 

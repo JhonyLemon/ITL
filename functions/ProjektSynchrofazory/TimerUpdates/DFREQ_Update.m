@@ -12,7 +12,9 @@ end
                              y=app.DataProvider.PMUdetails.DFREQ(app.DataProvider.DeviceSTN);
                              hold on;
                              subplot(1,1,1);
-                             plot(x,y',"Color",[0 0 0],"LineWidth",1);
+                             if(size(x)==size(y))
+                                plot(x,y,"Color",[0 0 0],"LineWidth",1);
+                             end
                                 title("DFREQ");
                              hold off;
                         end

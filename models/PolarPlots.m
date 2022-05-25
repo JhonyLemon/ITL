@@ -67,11 +67,11 @@ classdef PolarPlots < handle
                     switch obj.Mode
                         case ReferenceType.Default
                             if ~isempty(data.data.FREQ(obj.HandleToPlot.STN))
-                                ang=ang+((50-data.data.FREQ(obj.HandleToPlot.STN))*360);
+                                ang=((50-data.data.FREQ(obj.HandleToPlot.STN))*360);
                             end
                         case ReferenceType.CustomFreq
                             if ~isempty(data.data.FREQ(obj.HandleToPlot.STN)) && ~isempty(obj.Freq)
-                                ang=ang+((obj.Freq-data.data.FREQ(obj.HandleToPlot.STN))*360);
+                                ang=((obj.Freq-data.data.FREQ(obj.HandleToPlot.STN))*360);
                             end
                         case ReferenceType.OtherPMU
     
@@ -79,7 +79,7 @@ classdef PolarPlots < handle
                                 OtherDevice=list(obj.ID);
 
                                 if ~isempty(OtherDevice) && ~isempty(OtherDevice.data) && ~isempty(OtherDevice.data.FREQ)
-                                ang=ang+((OtherDevice.data.FREQ(obj.HandleToPlot.STN)-data.data.FREQ(obj.STN))*360);
+                                ang=((OtherDevice.data.FREQ(obj.HandleToPlot.STN)-data.data.FREQ(obj.STN))*360);
                                 end
                             end
                     end
