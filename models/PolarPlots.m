@@ -67,19 +67,21 @@ classdef PolarPlots < handle
                     switch obj.Mode
                         case ReferenceType.Default
                             if ~isempty(data.data.FREQ(obj.HandleToPlot.STN))
-                                ang=((50-data.data.FREQ(obj.HandleToPlot.STN))*360);
+                                ang=deg2rad(((50-data.data.FREQ(obj.HandleToPlot.STN))*360));
                             end
                         case ReferenceType.CustomFreq
                             if ~isempty(data.data.FREQ(obj.HandleToPlot.STN)) && ~isempty(obj.Freq)
-                                ang=((obj.Freq-data.data.FREQ(obj.HandleToPlot.STN))*360);
+                                ang=deg2rad(((obj.Freq-data.data.FREQ(obj.HandleToPlot.STN))*360));
                             end
                         case ReferenceType.OtherPMU
     
                             if ~isempty(data.data.FREQ(obj.HandleToPlot.STN)) && ~isempty(obj.ID) && isKey(list,obj.ID) && ~isempty(obj.STN)
                                 OtherDevice=list(obj.ID);
-
-                                if ~isempty(OtherDevice) && ~isempty(OtherDevice.data) && ~isempty(OtherDevice.data.FREQ)
-                                ang=((OtherDevice.data.FREQ(obj.HandleToPlot.STN)-data.data.FREQ(obj.STN))*360);
+                                k=keys(OtherDevice);
+                                key=char(cell2mat(k(1)));
+                                Device=OtherDevice(key);
+                                if ~isempty(Device.data) && ~isempty(Device.data.data) && ~isempty(Device.data.data.FREQ)
+                                ang=deg2rad(((Device.data.data.FREQ(key)-data.data.FREQ(obj.HandleToPlot.STN))*360));
                                 end
                             end
                     end

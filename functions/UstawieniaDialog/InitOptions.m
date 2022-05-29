@@ -6,5 +6,6 @@ arguments
 end
             app.MainApp = mainApp;
             app.CoilesekundodwieawykresySpinner.Value=mainApp.RefreshRate;
+            app.sciezkaDoFolderu.Value=app.MainApp.DataProvider.pathToDatabase;
 end
 

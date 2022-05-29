@@ -7,6 +7,10 @@ end
     stop(app.MainApp.Timer);
     app.MainApp.Timer=InitTimer(app.MainApp);
     start(app.MainApp.Timer);
+    if exist(app.sciezkaDoFolderu.Value,"dir")==7
+        app.MainApp.DataProvider.pathToDatabase=app.sciezkaDoFolderu.Value;
+    end
+    app.MainApp.DataProvider.openDataBase();
     delete(app);
 end
 

@@ -2,7 +2,7 @@ classdef ListOfPMU < handle
     %UNTITLED4 Summary of this class goes here
     %   Detailed explanation goes here
 
-    properties
+    properties(Access=public)
     appHandle ProjektSynchrofazory
     ListPMU; % map of PMU devices that we listen for
     UDPconnections% used to handle UDP connections
@@ -11,9 +11,9 @@ classdef ListOfPMU < handle
     DeviceSTN
     PolarPlotsMap
     dbFile
-    connection
+    connection sqlite
     dbTemp
-
+    pathToDatabase
     end
 
     methods
@@ -22,19 +22,14 @@ classdef ListOfPMU < handle
             obj.PolarPlotsMap = containers.Map("KeyType",'uint32','ValueType','any');
             obj.ListPMU = containers.Map("KeyType",'uint32','ValueType','any');
             obj.UDPconnections=ConnectionHolder.empty;
-            obj.PMUdetails=DeviceDetailsHolder();
+            obj.PMUdetails=DeviceDetailsHolder();                  
+            obj.dbFile="bazaITL.db";
 
-            
-                     obj.dbFile = "bazaITL.db";
-                     if isfile(obj.dbFile)
-                         obj.connection = sqlite(obj.dbFile, "connect");
-                     else
-                         obj.connection = sqlite(obj.dbFile, "create");
-                     end
- 
-                     obj.connection.AutoCommit = 'off';
-
-            obj.dbTemp=DataFrame.empty;
+            obj.dbTemp=struct("CommonData",struct("FRAMESIZE",uint16.empty,"IDCODE",uint16.empty,"SOC",datetime.empty,"FRACSEC",uint32.empty,"SYNCFRAMETYPE",uint8.empty,"SYNCVERSION",uint8.empty), ...
+                "CommonDataFrame",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty,"STAT_DATA_ERROR",uint8.empty,"STAT_PMU_SYNC",uint8.empty,"STAT_DATA_SORTING",uint8.empty,"STAT_PMU_TRIGGER",uint8.empty,"STAT_CNF_CHANGE",uint8.empty,"STAT_DATA_MODIFIED",uint8.empty,"STAT_PMU_TQ",uint8.empty,"STAT_UNLOCKED_TIME",uint8.empty,"STAT_TRIGGER_REASON",uint8.empty), ...
+                "DataFrameSTN",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty,"FREQ",double.empty,"DFREQ",double.empty), ...
+                "DataFramePhasorSTN",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty, "PHASOR_NAME",string.empty,"MAGNITUDE",double.empty,"PHASE",double.empty), ...
+                "DataFrameAnalogSTN",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty,"ANALOG_NAME",string.empty,"ANALOG",double.empty));
         end
 
         function openNewUdp(obj,PMU)
@@ -60,22 +55,51 @@ classdef ListOfPMU < handle
             end
         end
 
+        function openDataBase(obj)
+            if ~isempty(obj.connection)
+                if obj.connection.isopen==1
+                    obj.connection.close();
+                end
+            end
+             if   ~isempty(obj.pathToDatabase)
+                 if isfile(obj.pathToDatabase+"\"+obj.dbFile)
+                     obj.connection = sqlite(obj.pathToDatabase+"\"+obj.dbFile, "connect");
+                 else
+                     obj.connection = sqlite(obj.pathToDatabase+"\"+obj.dbFile, "create");
+                     execute(obj.connection,["CREATE TABLE CommonData (FRAMESIZE double, IDCODE double, SOC varchar, FRACSEC double, SYNCFRAMETYPE INTEGER, SYNCVERSION INTEGER )"]);
+                     execute(obj.connection,["CREATE TABLE CommonDataFrame (IDCODE double, SOC varchar, STN INTEGER, STAT_DATA_ERROR INTEGER, STAT_PMU_SYNC INTEGER, STAT_DATA_SORTING INTEGER, STAT_PMU_TRIGGER INTEGER, STAT_CNF_CHANGE INTEGER, STAT_DATA_MODIFIED INTEGER, STAT_PMU_TQ INTEGER, STAT_UNLOCKED_TIME INTEGER, STAT_TRIGGER_REASON INTEGER )"]);
+                     execute(obj.connection,["CREATE TABLE DataFrameAnalogSTN (IDCODE double, SOC varchar, STN varchar(113), ANALOG_NAME varchar(103), ANALOG double )"]);
+                     execute(obj.connection,["CREATE TABLE DataFramePhasorSTN (IDCODE double, SOC varchar, STN varchar(113), PHASOR_NAME varchar(103), MAGNITUDE double, PHASE double )"]);
+                     execute(obj.connection,["CREATE TABLE DataFrameSTN (IDCODE double, SOC varchar, STN varchar(113), FREQ double, DFREQ double )"]);
+                 end
+                 obj.connection.AutoCommit = 'off';
+             end
+        end
+
         function UdpCallback(obj,src,~)
                 frame=read(src,1,"uint8");%read data from socket
                 ID=uint32(swapbytes(typecast(uint8(frame.Data(5:6)),'uint16')));%check ID of recived frame
                 if obj.ListPMU.isKey(ID)%if ID from frame is in map
                     handle=obj.ListPMU(ID);
                     handle.InsertFrame(frame);%parse frame
-                    %%
+                    
                     %Wpis do bazy
-                if ~isempty(handle.data)
-                     obj.dbTemp(end+1)=handle.data;
-                     if(size(obj.dbTemp,2)>10)
-                         DataBaseWrite(obj.connection,obj.dbTemp);
-                         obj.dbTemp=DataFrame.empty;
-                     end
-                end
-                    %%
+                    if ~isempty(handle.data)
+                        if ~isempty(obj.connection)
+                            if obj.connection.isopen==1
+                                obj.DataWrite(handle.data);
+                                if(size(obj.dbTemp.CommonData.SOC,2)>5000)
+                                    DataBaseWrite(obj.connection,obj.dbTemp);
+                                    obj.dbTemp=struct("CommonData",struct("FRAMESIZE",uint16.empty,"IDCODE",uint16.empty,"SOC",datetime.empty,"FRACSEC",uint32.empty,"SYNCFRAMETYPE",uint8.empty,"SYNCVERSION",uint8.empty), ...
+                                        "CommonDataFrame",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty,"STAT_DATA_ERROR",uint8.empty,"STAT_PMU_SYNC",uint8.empty,"STAT_DATA_SORTING",uint8.empty,"STAT_PMU_TRIGGER",uint8.empty,"STAT_CNF_CHANGE",uint8.empty,"STAT_DATA_MODIFIED",uint8.empty,"STAT_PMU_TQ",uint8.empty,"STAT_UNLOCKED_TIME",uint8.empty,"STAT_TRIGGER_REASON",uint8.empty), ...
+                                        "DataFrameSTN",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty,"FREQ",double.empty,"DFREQ",double.empty), ...
+                                        "DataFramePhasorSTN",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty, "PHASOR_NAME",string.empty,"MAGNITUDE",double.empty,"PHASE",double.empty), ...
+                                        "DataFrameAnalogSTN",struct("IDCODE",uint16.empty,"SOC",datetime.empty,"STN",string.empty,"ANALOG_NAME",string.empty,"ANALOG",double.empty));
+                                end
+                            end
+                        end
+                    end
+                    
                     if handle.cnf_version==2 || handle.cnf_version==1
                         if ~isempty(handle.cnf)
                             obj.CreateNewPlot(handle.cnf);
@@ -158,6 +182,74 @@ classdef ListOfPMU < handle
             end
         end
 
+        function DataWrite(obj,data)
+
+            obj.dbTemp.CommonData.FRAMESIZE(end+1)=data.FRAMESIZE;
+            obj.dbTemp.CommonData.IDCODE(end+1)=data.ID_CODE_SOURCE;
+            obj.dbTemp.CommonData.SOC(end+1)=data.SOC;
+            obj.dbTemp.CommonData.FRACSEC(end+1)=data.FRACSEC;
+            obj.dbTemp.CommonData.SYNCFRAMETYPE(end+1)=uint8(data.SYNCFRAMETYPE);
+            obj.dbTemp.CommonData.SYNCVERSION(end+1)=uint8(data.SYNCVERSION);
+
+            k=keys(data.STAT_DATA_ERROR);
+            for j=1:size(data.STAT_DATA_ERROR)
+                key=char(cell2mat(k(j)));
+
+                obj.dbTemp.CommonDataFrame.IDCODE(end+1)=data.ID_CODE_SOURCE;
+                obj.dbTemp.CommonDataFrame.SOC(end+1)=data.SOC;
+                obj.dbTemp.CommonDataFrame.STN(end+1)=string(key);
+                obj.dbTemp.CommonDataFrame.STAT_DATA_ERROR(end+1)=uint8(data.STAT_DATA_ERROR(key));
+                obj.dbTemp.CommonDataFrame.STAT_PMU_SYNC(end+1)=uint8(data.STAT_PMU_SYNC(key));
+                obj.dbTemp.CommonDataFrame.STAT_DATA_SORTING(end+1)=uint8(data.STAT_DATA_SORTING(key));
+                obj.dbTemp.CommonDataFrame.STAT_PMU_TRIGGER(end+1)=uint8(data.STAT_PMU_TRIGGER(key));
+                obj.dbTemp.CommonDataFrame.STAT_CNF_CHANGE(end+1)=uint8(data.STAT_CNF_CHANGE(key));
+                obj.dbTemp.CommonDataFrame.STAT_DATA_MODIFIED(end+1)=uint8(data.STAT_DATA_MODIFIED(key));
+                obj.dbTemp.CommonDataFrame.STAT_PMU_TQ(end+1)=uint8(data.STAT_PMU_TQ(key));
+                obj.dbTemp.CommonDataFrame.STAT_UNLOCKED_TIME(end+1)=uint8(data.STAT_UNLOCKED_TIME(key));
+                obj.dbTemp.CommonDataFrame.STAT_TRIGGER_REASON(end+1)=uint8(data.STAT_TRIGGER_REASON(key));
+
+                obj.dbTemp.DataFrameSTN.IDCODE(end+1)=data.ID_CODE_SOURCE;
+                obj.dbTemp.DataFrameSTN.SOC(end+1)=data.SOC;
+                obj.dbTemp.DataFrameSTN.STN(end+1)=string(key);
+                obj.dbTemp.DataFrameSTN.FREQ(end+1)=data.FREQ(key);
+                obj.dbTemp.DataFrameSTN.DFREQ(end+1)=data.DFREQ(key);
+
+                phasor00=data.PHASORS0(key);
+                phasor10=data.PHASORS1(key);
+                k1=keys(phasor00);
+                for m=1:size(phasor00)
+                    key1=char(cell2mat(k1(m)));
+                    phasor0=phasor00(key1);
+                    phasor1=phasor10(key1);
+
+                    obj.dbTemp.DataFramePhasorSTN.IDCODE(end+1)=data.ID_CODE_SOURCE;
+                    obj.dbTemp.DataFramePhasorSTN.SOC(end+1)=data.SOC;
+                    obj.dbTemp.DataFramePhasorSTN.STN(end+1)=string(key);
+                    obj.dbTemp.DataFramePhasorSTN.PHASOR_NAME(end+1)=string(key1);
+                    obj.dbTemp.DataFramePhasorSTN.MAGNITUDE(end+1)=phasor0;
+                    obj.dbTemp.DataFramePhasorSTN.PHASE(end+1)=phasor1;
+
+                end
+
+                analog=data.ANALOG(key);
+                k1=keys(analog);
+                for m=1:size(analog)
+                    key1=char(cell2mat(k1(m)));
+                    analog0=analog(key1);
+                    %Writring dataframe analog fields
+
+                    obj.dbTemp.DataFrameAnalogSTN.IDCODE(end+1)=data.ID_CODE_SOURCE;
+                    obj.dbTemp.DataFrameAnalogSTN.SOC(end+1)=data.SOC;
+                    obj.dbTemp.DataFrameAnalogSTN.STN(end+1)=string(key);
+                    obj.dbTemp.DataFrameAnalogSTN.ANALOG_NAME(end+1)=string(key1);
+                    obj.dbTemp.DataFrameAnalogSTN.ANALOG(end+1)=analog0;
+
+                end
+  
+            end
+
+        end
+
         function CreateNewPlot(obj,handleCNF)
             arguments
                 obj ListOfPMU
@@ -200,10 +292,18 @@ classdef ListOfPMU < handle
 
         function delete(obj)
             delete(obj.UDPconnections);
-            if(size(obj.dbTemp,2)>0)
-                DataBaseWrite(obj.connection,obj.dbTemp);
+            if ~isempty(obj.connection)
+                if obj.connection.isopen==1
+                    if(size(obj.dbTemp.CommonData.SOC,2)>0)
+                        DataBaseWrite(obj.connection,obj.dbTemp);
+                    end
+                end
             end
-            obj.connection.close()
+            if ~isempty(obj.connection)
+                if obj.connection.isopen==1
+                    obj.connection.close();
+                end
+            end
             delete(obj.ListPMU);
         end
 

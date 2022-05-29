@@ -15,7 +15,6 @@ classdef PMU < handle
         cmd CommandFrame;
         header HeaderFrame;
         CommunicationType CommunicationTypes=CommunicationTypes.SpontaneousUDP;
-        UDPconnection;
     end
 
     methods

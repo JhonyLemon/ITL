@@ -17,8 +17,8 @@ end
             beta(:)=deg2rad(180-20);
             alpha(:)=deg2rad(180+20);
             
-            lineEndPointLat=latitude+magnitude.*sin(angle);
-            lineEndPointLon=longitude+magnitude.*cos(angle);
+            lineEndPointLat=latitude+0.1*sin(angle);
+            lineEndPointLon=longitude+0.1*cos(angle);
             leftArrowEndLat=lineEndPointLat+0.04*sin(beta+angle);
             leftArrowEndLon=lineEndPointLon+0.04*cos(beta+angle);
             rightArrowEndLat=lineEndPointLat+0.04*sin(alpha+angle);
@@ -30,6 +30,7 @@ end
                  [lineEndPointLat(i),leftArrowEndLat(i)],[lineEndPointLon(i),leftArrowEndLon(i)], ...
                  'color','r','LineWidth',2,'AlignVertexCenters','off');
             hold(handle,"on");
+            DrawCircleOnGeoPlot(handle,latitude(i),longitude(i),0.1)
             end
             hold(handle,"off");
                 if size(latLim,2)~=0 && size(lonLim,2)~=0
